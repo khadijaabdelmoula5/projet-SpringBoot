@@ -1,0 +1,54 @@
+<!DOCTYPE html>  
+<html xmlns:th="http://www.thymeleaf.org">  
+<head>  
+    <title>Modifier un Client</title>  
+    <link href="/css/bootstrap.min.css" rel="stylesheet">  
+</head>  
+<body class="container mt-5">  
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">  
+        <div class="container-fluid">  
+            <a class="navbar-brand" href="#">Gestion des comptes</a>  
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">  
+                <span class="navbar-toggler-icon"></span>  
+            </button>  
+            <div class="collapse navbar-collapse" id="navbarNav">  
+                <ul class="navbar-nav">  
+                    <li class="nav-item">  
+                        <a class="nav-link" href="/clients">Clients</a>  
+                    </li>  
+                    
+                </ul>  
+            </div>  
+        </div>  
+    </nav>  
+
+    <h1 class="text-center mb-4">Modifier un Client</h1>  
+
+    <div class="card mb-4">  
+        <div class="card-header">  
+            <h2>Modifier les informations du client</h2>  
+        </div>  
+        <div class="card-body">  
+            <form th:action="@{/clients/save}" th:object="${client}" method="post" class="row g-3">  
+                <div class="col-md-6">  
+                    <label class="form-label">CIN</label>  
+                    <input type="text" th:field="*{id}" class="form-control" required placeholder="Entrez le CIN du client"  
+                           maxlength="8" pattern="^\d{8}$" title="Le CIN doit être exactement de 8 chiffres et ne contenir que des chiffres" th:readonly="true" />  
+                </div>  
+                <div class="col-md-6">  
+                    <label class="form-label">Nom</label>  
+                    <input type="text" th:field="*{nom}" class="form-control" required/>  
+                </div>  
+                <div class="col-md-6">  
+                    <label class="form-label">Prénom</label>  
+                    <input type="text" th:field="*{prenom}" class="form-control" required/>  
+                </div>  
+                <div class="col-12">  
+                    <button type="submit" class="btn btn-primary">Modifier</button>  
+                    <a href="/clients" class="btn btn-secondary">Annuler</a>  
+                </div>  
+            </form>  
+        </div>  
+    </div>  
+</body>  
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>Gestion des Comptes</title>
+	<link href="/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		#suggestionsBox {
+			position: absolute;
+			background-color: #ffffff;
+			border: 1px solid #ccc;
+			max-height: 150px;
+			overflow-y: auto;
+			z-index: 1000;
+			width: 100%;
+		}
+
+		.suggestion-item {
+			padding: 10px;
+			cursor: pointer;
+		}
+
+		.suggestion-item:hover {
+			background-color: #f0f0f0;
+		}
+	</style>
+</head>
+
+<body class="container mt-5">
+	<!-- Navigation Bar -->
+	<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+		<div class="container-fluid">
+			<a class="navbar-brand" href="#">Gestion des comptes</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+				aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav">
+					<li class="nav-item">
+						<a class="nav-link" href="/clients">Clients</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/comptes">Comptes</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<h1 class="text-center mb-4">Gestion des Comptes</h1>
+
+	<!-- Message d'erreur -->
+	<div th:if="${errorMessage}" class="alert alert-danger">
+		<p th:text="${errorMessage}"></p>
+	</div>
+
+	<!-- Formulaire d'ajout -->
+	<div class="card mb-4">
+		<div class="card-header">
+			<h2>Ajouter un Compte</h2>
+		</div>
+		<div class="card-body">
+			<form th:action="@{/comptes/save}" th:object="${compte}" method="post" class="row g-3">
+				<div class="col-md-6">
+					<label class="form-label">RIB</label>
+					<input type="number" th:field="*{rib}" class="form-control" required placeholder="Entrez le RIB"
+						min="0" />
+				</div>
+				<div class="col-md-6">
+					<label class="form-label">Solde</label>
+					<input type="number" th:field="*{solde}" class="form-control" required placeholder="Entrez le solde"
+						step="0.01" />
+				</div>
+				<div class="col-md-6 position-relative">
+					<label class="form-label">Client</label>
+					<input type="text" id="clientSearch" oninput="fetchClients()"
+						placeholder="Tapez pour chercher un client..." class="form-control" autocomplete="off"
+						required />
+					<input type="hidden" id="clientId" th:field="*{client.id}" />
+					<div id="suggestionsBox"></div>
+				</div>
+				<div class="col-12">
+					<button type="submit" class="btn btn-primary">Enregistrer</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+
+		
+		
+	<!-- Tableau des comptes -->
+	<h2 class="mb-3">Liste des Comptes</h2>
+	<!-- Barre de recherche -->
+		<form class="d-flex mb-4" method="get" th:action="@{/comptes}">
+		    <input type="text" class="form-control me-2" name="searchRib" placeholder="Rechercher par Rib" 
+		           th:value="${searchRib}" aria-label="Rechercher" maxlength="8">
+		    <button class="btn btn-primary" type="submit">
+		        <i class="fas fa-search"></i> Rechercher
+		    </button>
+		</form>
+	<table class="table table-bordered table-striped">
+		<thead class="table-dark">
+			<tr>
+				<th>RIB</th>
+				<th>Solde</th>
+				<th>Client</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr id="row-${compte.rib}" th:each="compte : ${comptes}">
+				<td th:text="${compte.rib}"></td>
+				<td th:text="${compte.solde}"></td>
+				<td th:text="${compte.client.nom}"></td>
+				<td>
+					<a th:href="@{/comptes/edit/{rib}(rib=${compte.rib})}"
+						class="btn btn-warning btn-sm me-2">Modifier</a>
+					<a th:href="@{'/comptes/delete/' + ${compte.rib}}" class="btn btn-danger btn-sm">Supprimer</a>
+					<a th:href="'javascript:deleteCompte('+${compte.rib}+')'"class="btn btn-info btn-sm ">Supprimer-Ajax</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<script src="/js/bootstrap.bundle.min.js"></script>
+	<script src="/js/jquery-3.7.1.min.js"></script>
+	<script src="/js/sweetalert.min.js"></script>
+	<script src="/js/compte.js"></script>
+	<script>
+		async function fetchClients() {
+			const input = document.getElementById('clientSearch').value;
+			if (input.length < 2) {
+				document.getElementById('suggestionsBox').innerHTML = '';
+				return;
+			}
+
+			try {
+				const response = await fetch(`/comptes/autocomplete?query=${input}`);
+				if (!response.ok) {
+					throw new Error(`HTTP error! Status: ${response.status}`);
+				}
+				const clients = await response.json();
+				displaySuggestions(clients);
+			} catch (error) {
+				console.error("Erreur lors de la récupération des clients :", error);
+			}
+		}
+
+		function displaySuggestions(clients) {
+			const suggestionsBox = document.getElementById('suggestionsBox');
+			suggestionsBox.innerHTML = ''; 
+
+			clients.forEach(client => {
+				const suggestionItem = document.createElement('div');
+				suggestionItem.textContent = `${client.nom} ${client.prenom}`;
+				suggestionItem.classList.add('suggestion-item');
+
+				suggestionItem.onclick = () => {
+					document.getElementById('clientSearch').value = `${client.nom} ${client.prenom}`;  
+					document.getElementById('clientId').value = client.id;   
+					suggestionsBox.innerHTML = '';   
+				};
+
+				suggestionsBox.appendChild(suggestionItem);
+			});
+		}
+
+
+	</script>
+</body>
+
+</html>
